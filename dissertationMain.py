@@ -3,13 +3,29 @@ import networkx as nx
 import random
 import matplotlib.pyplot as plt
 import tkinter as tk
+from PIL import  ImageTk 
+import PIL.Image
+from tkinter import *
 from tkinter import filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class RandomGraphGeneratorGUI:
     def __init__(self, master):
         self.master = master
+        master.geometry("1200x900")
         master.title("Random Graph Generator")
+
+        
+
+        # Load the background image
+        bg_image = PIL.Image.open('worldNetwork.jpg')
+        bg_image = bg_image.resize((1200, 900), PIL.Image.ANTIALIAS)
+        self.bg_photo = ImageTk.PhotoImage(bg_image)
+        
+        # Create a Label object with the background image
+        self.bg_label = tk.Label(master, image=self.bg_photo)
+        self.bg_label.place(x=0, y=0, relwidth=1, relheight=1) # Set the Label to fill the entire window
+        
 
         # Create widgets
         self.label1 = tk.Label(master, text="Number of nodes:")
@@ -25,15 +41,15 @@ class RandomGraphGeneratorGUI:
         self.canvas = FigureCanvasTkAgg(self.fig, master=master)
 
         # Pack widgets
-        self.label1.pack()
+        self.label1.pack(side = TOP, padx=10, pady=(20,0))
         self.entry1.pack()
-        self.label2.pack()
+        self.label2.pack(side = TOP, padx=10, pady=(20,0))
         self.entry2.pack()
-        self.label3.pack()
+        self.label3.pack(side = TOP, padx=10, pady=(20,0))
         self.entry3.pack()
-        self.button1.pack()
-        self.button1.pack()
-        self.button2.pack()
+        self.button1.pack(side = TOP, padx=10, pady=(20,0))
+        self.button1.pack(side = TOP, padx=10, pady=(20,0))
+        self.button2.pack(side = TOP, padx=10, pady=(20,10))
         self.canvas.get_tk_widget().pack()
 
     def generate_graph(self):
