@@ -8,6 +8,7 @@ import PIL.Image
 from tkinter import *
 from tkinter import filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import time
 
 class RandomGraphGeneratorGUI:
     def __init__(self, master):
@@ -31,26 +32,28 @@ class RandomGraphGeneratorGUI:
         self.label1 = tk.Label(master, text="Number of nodes:")
         self.label2 = tk.Label(master, text="Minimum number of edges:")
         self.label3 = tk.Label(master, text="Maximum number of edges:")
+        self.label4 = tk.Label(master, text="Bellman-Ford time:" )
+        self.label5 = tk.Label(master, text="Djisktra time:" )
         self.entry1 = tk.Entry(master)
         self.entry2 = tk.Entry(master)
         self.entry3 = tk.Entry(master)
         self.button1 = tk.Button(master, text="Generate Graph", command=self.generate_graph)
         self.button2 = tk.Button(master, text="Load Graph", command=self.load_graph)
         self.button3 = tk.Button(master, text="Save Graph", command=self.save_graph)
-        self.fig = plt.figure(figsize=(6, 6))
+        self.fig = plt.figure(figsize=(10, 6))
         self.canvas = FigureCanvasTkAgg(self.fig, master=master)
 
         # Pack widgets
-        self.label1.pack(side = TOP, padx=10, pady=(20,0))
-        self.entry1.pack()
-        self.label2.pack(side = TOP, padx=10, pady=(20,0))
-        self.entry2.pack()
-        self.label3.pack(side = TOP, padx=10, pady=(20,0))
-        self.entry3.pack()
-        self.button1.pack(side = TOP, padx=10, pady=(20,0))
-        self.button1.pack(side = TOP, padx=10, pady=(20,0))
-        self.button2.pack(side = TOP, padx=10, pady=(20,10))
-        self.canvas.get_tk_widget().pack()
+        self.label1.place(x=30, y=20)
+        self.entry1.place(x=30, y=50)
+        self.label2.place(x=200, y=20)
+        self.entry2.place(x=200, y=50)
+        self.label3.place(x=400, y=20)
+        self.entry3.place(x=400, y=50)
+        self.button1.place(x=600, y=20)
+        self.button2.place(x=700, y=20)
+        #self.button3.place(x=800, y=20)
+        self.canvas.get_tk_widget().place(x=100, y=150)
 
     def generate_graph(self):
         n_nodes = int(self.entry1.get())
@@ -83,16 +86,71 @@ class RandomGraphGeneratorGUI:
         #Store a graph for reusabulity
         #nx.write_gml(G, "mygraph.gml")
 
+        
 
+        # Apply Bellman-Ford and Dijkstra's algorithms
+        start_node = 0
+        end_node = n_nodes - 1
+        start_time = time.time()
+        bf_dist = nx.single_source_bellman_ford_path_length(G, start_node)
+        bf_time = time.time() - start_time
+
+        start_time = time.time()
+        djk_dist = nx.shortest_path_length(G, source=start_node, weight='weight')
+        djk_time = time.time() - start_time
+
+        # Measure packet arrival time
+        packet_speed = 1  # Distance covered by packet per second
+        packet_path = nx.shortest_path(G, source=start_node, target=end_node, weight='weight')
+        packet_distance = nx.shortest_path_length(G, source=start_node, target=end_node, weight='weight')
+        packet_arrival_time = packet_distance / packet_speed
+
+        # Print results
+        print("Bellman-Ford distance:", bf_dist)
+        print("Bellman-Ford time:", bf_time)
+        print("Dijkstra distance:", djk_dist)
+        print("Dijkstra time:", djk_time)
+        print("Packet path:", packet_path)
+        print("Packet arrival time:", packet_arrival_time, "seconds")
+
+
+
+        # Draw graph
         self.fig.clear()
         pos = nx.spring_layout(G)
         nx.draw(G, pos, with_labels=True)
         nx.draw_networkx_edge_labels(G, pos, edge_labels=nx.get_edge_attributes(G, 'weight'))
+        nx.draw_networkx_edges(G, pos, edgelist=[(packet_path[i], packet_path[i+1]) for i in range(len(packet_path)-1)],
+                               edge_color='r', width=2)
         self.canvas.draw()
 
-        #Add the save graph button after drawing the graph
+        # Add the save graph button after drawing the graph
         self.G = G  # Store the graph object in self.G for later use
-        self.button3.pack()
+        self.button3.place(x=800, y=20)
+        self.label4.place(x=1000, y=20)
+        self.label5.place(x=1000, y=60)
+   
+
+
+        # Create a new window to show the results
+        result_window = Toplevel(self.master)
+        result_window.title("Results")
+
+        # Create labels to display the results
+        #bf_dist_label = Label(result_window, text="Bellman-Ford distance: " + str(bf_dist))
+        bf_time_label = Label(result_window, text="Bellman-Ford time: " + str(bf_time))
+        #djk_dist_label = Label(result_window, text="Dijkstra distance: " + str(djk_dist))
+        djk_time_label = Label(result_window, text="Dijkstra time: " + str(djk_time))
+        path_label = Label(result_window, text="Packet path: " + str(packet_path))
+        arrival_time_label = Label(result_window, text="Packet arrival time: " + str(packet_arrival_time) + " seconds")
+
+        # Pack the labels in the window
+        #bf_dist_label.pack()
+        bf_time_label.pack()
+        #djk_dist_label.pack()
+        djk_time_label.pack()
+        path_label.pack()
+        arrival_time_label.pack()
 
 
     def save_graph(self):
