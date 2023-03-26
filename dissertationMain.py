@@ -9,6 +9,7 @@ from tkinter import *
 from tkinter import filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import time
+import csv
 
 class RandomGraphGeneratorGUI:
     def __init__(self, master):
@@ -30,13 +31,13 @@ class RandomGraphGeneratorGUI:
 
         # Create widgets
         self.label1 = tk.Label(master, text="Number of nodes:")
-        self.label2 = tk.Label(master, text="Minimum number of edges:")
-        self.label3 = tk.Label(master, text="Maximum number of edges:")
+        self.label2 = tk.Label(master, text="Number of edges:")
+        #self.label3 = tk.Label(master, text="Maximum number of edges:")
         self.label4 = tk.Label(master, text="Bellman-Ford time:" )
         self.label5 = tk.Label(master, text="Djisktra time:" )
         self.entry1 = tk.Entry(master)
         self.entry2 = tk.Entry(master)
-        self.entry3 = tk.Entry(master)
+        #self.entry3 = tk.Entry(master)
         self.button1 = tk.Button(master, text="Generate Graph", command=self.generate_graph)
         self.button2 = tk.Button(master, text="Load Graph", command=self.load_graph)
         self.button3 = tk.Button(master, text="Save Graph", command=self.save_graph)
@@ -48,8 +49,8 @@ class RandomGraphGeneratorGUI:
         self.entry1.place(x=30, y=50)
         self.label2.place(x=200, y=20)
         self.entry2.place(x=200, y=50)
-        self.label3.place(x=400, y=20)
-        self.entry3.place(x=400, y=50)
+        #self.label3.place(x=400, y=20)
+        #self.entry3.place(x=400, y=50)
         self.button1.place(x=600, y=20)
         self.button2.place(x=700, y=20)
         #self.button3.place(x=800, y=20)
@@ -57,9 +58,9 @@ class RandomGraphGeneratorGUI:
 
     def generate_graph(self):
         n_nodes = int(self.entry1.get())
-        n_edges_min = int(self.entry2.get())
-        n_edges_max = int(self.entry3.get())
-        n_edges = random.randint(n_edges_min, n_edges_max)
+        n_edges = int(self.entry2.get())
+        #n_edges_max = int(self.entry3.get())
+        #n_edges = random.randint(n_edges_min, n_edges_max)
 
         G = nx.Graph()
 
@@ -151,6 +152,26 @@ class RandomGraphGeneratorGUI:
         djk_time_label.pack()
         path_label.pack()
         arrival_time_label.pack()
+
+        
+
+        # Create a list of data
+        data = [
+            ["Bellman-Ford time", bf_time],
+            ["Dijkstra time", djk_time],
+            ["Packet path", packet_path],
+            ["Packet arrival time (seconds)", packet_arrival_time]
+        ]
+
+        # Transpose the data to switch rows by columns
+        data_transposed = list(zip(*data))
+
+        # Create a new CSV file and write the data to it
+        with open('result.csv', mode='a', newline='') as file:
+            writer = csv.writer(file)
+            for row in data_transposed:
+                writer.writerow(row)
+
 
 
     def save_graph(self):

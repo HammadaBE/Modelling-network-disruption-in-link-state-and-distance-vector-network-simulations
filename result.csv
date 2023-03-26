@@ -1,0 +1,4 @@
+Bellman-Ford time,Dijkstra time,Packet path,Packet arrival time (seconds)
+0.007981777,0,"[0, 6, 99]",8
+Bellman-Ford time,Dijkstra time,Packet path,Packet arrival time (seconds)
+0,0.008003473,"[0, 6, 19]",6
