@@ -1,6 +1,7 @@
 import os
 import networkx as nx
 import random
+import numpy as np
 import matplotlib.pyplot as plt
 import tkinter as tk
 from PIL import  ImageTk 
@@ -173,10 +174,23 @@ class RandomGraphGeneratorGUI:
             for row in data_transposed:
                 writer.writerow(row)
 
+    
+
     def disrupt_path(self):
         # Get the graph G from the canvas
         G_array = self.fig.axes[0].collections[0].get_paths()[0].to_polygons()[0]
-        G = nx.from_numpy_array(G_array)
+        n_vertices = len(G_array)
+        G_array = np.asarray(G_array)
+        # Create an empty n x n adjacency matrix
+        A = np.zeros((n_vertices, n_vertices))
+        # Compute the Euclidean distances between each pair of vertices
+        for i in range(n_vertices):
+            for j in range(i+1, n_vertices):
+                dist = np.linalg.norm(G_array[i] - G_array[j])
+                A[i,j] = dist
+                A[j,i] = dist
+        # Create a graph from the adjacency matrix using the from_numpy_array function
+        G = nx.from_numpy_array(A, create_using=nx.Graph())
         # Choose a random edge to remove
         edge = random.choice(list(G.edges()))
         # Remove the edge from the graph
@@ -194,6 +208,7 @@ class RandomGraphGeneratorGUI:
         nx.draw_networkx_edge_labels(G, pos, edge_labels=nx.get_edge_attributes(G, 'weight'))
         nx.draw_networkx_edges(G, pos, edgelist=[edge], edge_color='r', width=2)
         self.canvas.draw()
+
 
 
     def save_graph(self):
