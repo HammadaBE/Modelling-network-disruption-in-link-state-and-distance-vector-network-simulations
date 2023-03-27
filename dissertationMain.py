@@ -39,8 +39,9 @@ class RandomGraphGeneratorGUI:
         self.entry2 = tk.Entry(master)
         #self.entry3 = tk.Entry(master)
         self.button1 = tk.Button(master, text="Generate Graph", command=self.generate_graph)
-        self.button2 = tk.Button(master, text="Load Graph", command=self.load_graph)
-        self.button3 = tk.Button(master, text="Save Graph", command=self.save_graph)
+        self.button2 = tk.Button(master, text="Disrupt path", command=self.disrupt_path)
+        self.button3 = tk.Button(master, text="Load Graph", command=self.load_graph)
+        self.button4 = tk.Button(master, text="Save Graph", command=self.save_graph)
         self.fig = plt.figure(figsize=(10, 6))
         self.canvas = FigureCanvasTkAgg(self.fig, master=master)
 
@@ -53,7 +54,7 @@ class RandomGraphGeneratorGUI:
         #self.entry3.place(x=400, y=50)
         self.button1.place(x=600, y=20)
         self.button2.place(x=700, y=20)
-        #self.button3.place(x=800, y=20)
+        self.button3.place(x=800, y=20)
         self.canvas.get_tk_widget().place(x=100, y=150)
 
     def generate_graph(self):
@@ -127,7 +128,7 @@ class RandomGraphGeneratorGUI:
 
         # Add the save graph button after drawing the graph
         self.G = G  # Store the graph object in self.G for later use
-        self.button3.place(x=800, y=20)
+        self.button4.place(x=1600, y=50)
         self.label4.place(x=1000, y=20)
         self.label5.place(x=1000, y=60)
    
@@ -138,17 +139,17 @@ class RandomGraphGeneratorGUI:
         result_window.title("Results")
 
         # Create labels to display the results
-        #bf_dist_label = Label(result_window, text="Bellman-Ford distance: " + str(bf_dist))
+        # bf_dist_label = Label(result_window, text="Bellman-Ford distance: " + str(bf_dist))
         bf_time_label = Label(result_window, text="Bellman-Ford time: " + str(bf_time))
-        #djk_dist_label = Label(result_window, text="Dijkstra distance: " + str(djk_dist))
+        # djk_dist_label = Label(result_window, text="Dijkstra distance: " + str(djk_dist))
         djk_time_label = Label(result_window, text="Dijkstra time: " + str(djk_time))
         path_label = Label(result_window, text="Packet path: " + str(packet_path))
         arrival_time_label = Label(result_window, text="Packet arrival time: " + str(packet_arrival_time) + " seconds")
 
         # Pack the labels in the window
-        #bf_dist_label.pack()
+        # bf_dist_label.pack()
         bf_time_label.pack()
-        #djk_dist_label.pack()
+        # djk_dist_label.pack()
         djk_time_label.pack()
         path_label.pack()
         arrival_time_label.pack()
@@ -157,10 +158,10 @@ class RandomGraphGeneratorGUI:
 
         # Create a list of data
         data = [
-            ["Bellman-Ford time", bf_time],
-            ["Dijkstra time", djk_time],
-            ["Packet path", packet_path],
-            ["Packet arrival time (seconds)", packet_arrival_time]
+            [bf_time],
+            [djk_time],
+            [packet_path],
+            [packet_arrival_time]
         ]
 
         # Transpose the data to switch rows by columns
@@ -172,6 +173,27 @@ class RandomGraphGeneratorGUI:
             for row in data_transposed:
                 writer.writerow(row)
 
+    def disrupt_path(self):
+        # Get the graph G from the canvas
+        G_array = self.fig.axes[0].collections[0].get_paths()[0].to_polygons()[0]
+        G = nx.from_numpy_array(G_array)
+        # Choose a random edge to remove
+        edge = random.choice(list(G.edges()))
+        # Remove the edge from the graph
+        G.remove_edge(*edge)
+        # Recompute shortest path using Dijkstra's algorithm
+        start_node = 0
+        end_node = len(G.nodes) - 1
+        djk_dist = nx.shortest_path_length(G, source=start_node, target=end_node, weight='weight')
+        # Print disrupted path distance
+        print("Disrupted path distance:", djk_dist)
+        # Redraw the graph with updated edge labels
+        self.fig.clear()
+        pos = nx.spring_layout(G)
+        nx.draw(G, pos, with_labels=True)
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=nx.get_edge_attributes(G, 'weight'))
+        nx.draw_networkx_edges(G, pos, edgelist=[edge], edge_color='r', width=2)
+        self.canvas.draw()
 
 
     def save_graph(self):
