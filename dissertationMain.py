@@ -34,8 +34,8 @@ class RandomGraphGeneratorGUI:
         self.label1 = tk.Label(master, text="Number of nodes:")
         self.label2 = tk.Label(master, text="Number of edges:")
         #self.label3 = tk.Label(master, text="Maximum number of edges:")
-        self.label4 = tk.Label(master, text="Bellman-Ford time:" )
-        self.label5 = tk.Label(master, text="Djisktra time:" )
+        # self.label4 = tk.Label(master, text="Bellman-Ford time:" )
+        # self.label5 = tk.Label(master, text="Djisktra time:" )
         self.entry1 = tk.Entry(master)
         self.entry2 = tk.Entry(master)
         #self.entry3 = tk.Entry(master)
@@ -129,9 +129,9 @@ class RandomGraphGeneratorGUI:
 
         # Add the save graph button after drawing the graph
         self.G = G  # Store the graph object in self.G for later use
-        self.button4.place(x=1600, y=50)
-        self.label4.place(x=1000, y=20)
-        self.label5.place(x=1000, y=60)
+        self.button4.place(x=900, y=20)
+        # self.label4.place(x=1000, y=20)
+        # self.label5.place(x=1000, y=60)
    
 
 
