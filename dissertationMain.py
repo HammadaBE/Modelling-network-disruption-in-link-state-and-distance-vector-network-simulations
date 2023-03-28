@@ -75,7 +75,8 @@ class RandomGraphGeneratorGUI:
             while node1 == node2 or G.has_edge(node1, node2):
                 node1 = random.randint(0, n_nodes-1)
                 node2 = random.randint(0, n_nodes-1)
-            cost = random.randint(1, 10)
+            #cost = random.randint(1, 10)
+            cost=1
             G.add_edge(node1, node2, weight=cost)
 
         for node in G.nodes:
@@ -95,11 +96,11 @@ class RandomGraphGeneratorGUI:
         start_node = 0
         end_node = n_nodes - 1
         start_time = time.time()
-        bf_dist = nx.single_source_bellman_ford_path_length(G, start_node)
+        bf_dist = nx.bellman_ford_path(G,target=end_node, source=start_node, weight='weight')
         bf_time = time.time() - start_time
 
         start_time = time.time()
-        djk_dist = nx.shortest_path_length(G, source=start_node, weight='weight')
+        djk_dist = nx.dijkstra_path(G,target=end_node, source=start_node, weight='weight')
         djk_time = time.time() - start_time
 
         # Measure packet arrival time
@@ -159,6 +160,8 @@ class RandomGraphGeneratorGUI:
 
         # Create a list of data
         data = [
+            [n_nodes],
+            [n_edges],
             [bf_time],
             [djk_time],
             [packet_path],
