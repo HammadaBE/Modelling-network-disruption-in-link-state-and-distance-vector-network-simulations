@@ -40,10 +40,10 @@ class RandomGraphGeneratorGUI:
         self.entry2 = tk.Entry(master)
         #self.entry3 = tk.Entry(master)
         self.button1 = tk.Button(master, text="Generate Graph", command=self.generate_graph)
-        self.button2 = tk.Button(master, text="Disrupt path", command=self.disrupt_path)
+        #self.button2 = tk.Button(master, text="Disrupt path", command=self.disrupt_path)
         self.button3 = tk.Button(master, text="Load Graph", command=self.load_graph)
         self.button4 = tk.Button(master, text="Save Graph", command=self.save_graph)
-        self.button5 = tk.Button(master, text="Build Routing Table", command=self.build_routing_table)
+        #self.button5 = tk.Button(master, text="Build Routing Table", command=self.build_routing_table)
         self.fig = plt.figure(figsize=(10, 6))
         self.canvas = FigureCanvasTkAgg(self.fig, master=master)
 
@@ -55,9 +55,9 @@ class RandomGraphGeneratorGUI:
         #self.label3.place(x=400, y=20)
         #self.entry3.place(x=400, y=50)
         self.button1.place(x=600, y=20)
-        self.button2.place(x=700, y=20)
+        #self.button2.place(x=700, y=20)
         self.button3.place(x=800, y=20)
-        self.button5.place(x=800, y=50)
+        #self.button5.place(x=800, y=50)
         self.canvas.get_tk_widget().place(x=100, y=150)
 
     def generate_graph(self):
@@ -179,47 +179,6 @@ class RandomGraphGeneratorGUI:
             for row in data_transposed:
                 writer.writerow(row)
 
-    
-
-    def disrupt_path(self):
-        # Get the graph G from the canvas
-        G_array = self.fig.axes[0].collections[0].get_paths()[0].to_polygons()[0]
-        n_vertices = len(G_array)
-        G_array = np.asarray(G_array)
-        # Create an empty n x n adjacency matrix
-        A = np.zeros((n_vertices, n_vertices))
-        # Compute the Euclidean distances between each pair of vertices
-        for i in range(n_vertices):
-            for j in range(i+1, n_vertices):
-                dist = np.linalg.norm(G_array[i] - G_array[j])
-                A[i,j] = dist
-                A[j,i] = dist
-        # Create a graph from the adjacency matrix using the from_numpy_array function
-        G = nx.from_numpy_array(A, create_using=nx.Graph())
-        # Choose a random edge to remove
-        edge = random.choice(list(G.edges()))
-        # Remove the edge from the graph
-        G.remove_edge(*edge)
-        # Recompute shortest path using Dijkstra's algorithm
-        start_node = 0
-        end_node = len(G.nodes) - 1
-        djk_dist = nx.dijkstra_path(G, source=start_node, target=end_node, weight='weight')
-         # Recompute shortest path using Bellman-Ford algorithm
-        bf_dist = nx.bellman_ford_path_length(G, source=start_node, weight='weight')
-        # Print disrupted path distance for both algorithms
-        print("Disrupted path distance using Dijkstra:", djk_dist)
-        print("Disrupted path distance using Bellman-Ford:", bf_dist)
-        # Redraw the graph with updated edge labels
-        self.fig.clear()
-        pos = nx.spring_layout(G)
-        nx.draw(G, pos, with_labels=True)
-        nx.draw_networkx_edge_labels(G, pos, edge_labels=nx.get_edge_attributes(G, 'weight'))
-        nx.draw_networkx_edges(G, pos, edgelist=[edge], edge_color='r', width=2)
-        self.canvas.draw()
-
-    
-
-    def build_routing_table(G):
         # Initialize a routing table dictionary
         routing_table = {}
 
@@ -238,8 +197,67 @@ class RandomGraphGeneratorGUI:
                 next_hop = shortest_path[1]
                 routing_table[src][dest] = next_hop
 
-        return routing_table
+        print(routing_table)
+    # def disrupt_path(self):
+    #     # Get the graph G from the canvas
+    #     G_array = self.fig.axes[0].collections[0].get_paths()[0].to_polygons()[0]
+    #     n_vertices = len(G_array)
+    #     G_array = np.asarray(G_array)
+    #     # Create an empty n x n adjacency matrix
+    #     A = np.zeros((n_vertices, n_vertices))
+    #     # Compute the Euclidean distances between each pair of vertices
+    #     for i in range(n_vertices):
+    #         for j in range(i+1, n_vertices):
+    #             dist = np.linalg.norm(G_array[i] - G_array[j])
+    #             A[i,j] = dist
+    #             A[j,i] = dist
+    #     # Create a graph from the adjacency matrix using the from_numpy_array function
+    #     G = nx.from_numpy_array(A, create_using=nx.Graph())
+    #     # Choose a random edge to remove
+    #     edge = random.choice(list(G.edges()))
+    #     # Remove the edge from the graph
+    #     G.remove_edge(*edge)
+    #     # Recompute shortest path using Dijkstra's algorithm
+    #     start_node = 0
+    #     end_node = len(G.nodes) - 1
+    #     djk_dist = nx.dijkstra_path(G, source=start_node, target=end_node, weight='weight')
+    #      # Recompute shortest path using Bellman-Ford algorithm
+    #     bf_dist = nx.bellman_ford_path_length(G, source=start_node, weight='weight')
+    #     # Print disrupted path distance for both algorithms
+    #     print("Disrupted path distance using Dijkstra:", djk_dist)
+    #     print("Disrupted path distance using Bellman-Ford:", bf_dist)
+    #     # Redraw the graph with updated edge labels
+    #     self.fig.clear()
+    #     pos = nx.spring_layout(G)
+    #     nx.draw(G, pos, with_labels=True)
+    #     nx.draw_networkx_edge_labels(G, pos, edge_labels=nx.get_edge_attributes(G, 'weight'))
+    #     nx.draw_networkx_edges(G, pos, edgelist=[edge], edge_color='r', width=2)
+    #     self.canvas.draw()
 
+    
+
+    # def build_routing_table(G):
+    #     # Initialize a routing table dictionary
+    #     routing_table = {}
+
+    #     # Calculate the shortest paths between each pair of nodes in the graph
+    #     all_shortest_paths = dict(nx.all_pairs_dijkstra_path(G))
+
+    #     # For each node in the graph, add its routing table entry
+    #     for src in G.nodes():
+    #         routing_table[src] = {}
+
+    #         # For each destination node in the graph, add the shortest path to the routing table
+    #         for dest in G.nodes():
+    #             if src == dest:
+    #                 continue  # Skip adding the shortest path to itself
+    #             shortest_path = all_shortest_paths[src][dest]
+    #             next_hop = shortest_path[1]
+    #             routing_table[src][dest] = next_hop
+
+    #     return routing_table
+
+   
 
     def save_graph(self):
         initial_dir = os.path.expanduser("./savedGraphs")  
@@ -259,6 +277,12 @@ class RandomGraphGeneratorGUI:
             self.canvas.draw()
 
 
+
+
 root = tk.Tk()
 app = RandomGraphGeneratorGUI(root)
 root.mainloop()
+
+
+
+
