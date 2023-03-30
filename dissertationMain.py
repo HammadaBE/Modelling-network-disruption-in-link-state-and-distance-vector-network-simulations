@@ -198,6 +198,7 @@ class RandomGraphGeneratorGUI:
                 routing_table[src][dest] = next_hop
 
         print(routing_table)
+        
     # def disrupt_path(self):
     #     # Get the graph G from the canvas
     #     G_array = self.fig.axes[0].collections[0].get_paths()[0].to_polygons()[0]
