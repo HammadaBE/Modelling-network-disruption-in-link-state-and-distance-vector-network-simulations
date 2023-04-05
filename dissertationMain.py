@@ -11,6 +11,7 @@ from tkinter import filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import time
 import csv
+import utils
 
 class RandomGraphGeneratorGUI:
     def __init__(self, master):
@@ -136,6 +137,10 @@ class RandomGraphGeneratorGUI:
         # self.label4.place(x=1000, y=20)
         # self.label5.place(x=1000, y=60)
    
+        #utils.distance_vector_algorithm_time(G, source=0)
+        DVlatency =utils.distance_vector_algorithm_time(G, source=0)
+        #utils.link_state_algorithm_time(G, source=0)
+        LSlatency=utils.link_state_algorithm_time(G, source=0)
 
 
         # Create a new window to show the results
@@ -149,6 +154,8 @@ class RandomGraphGeneratorGUI:
         djk_time_label = Label(result_window, text="Dijkstra time: " + str(djk_time))
         path_label = Label(result_window, text="Packet path: " + str(packet_path))
         arrival_time_label = Label(result_window, text="Packet arrival time: " + str(packet_arrival_time) + " seconds")
+        DV_time_label = Label(result_window, text="Distance Vector latency: " + str(DVlatency) + " seconds")
+        LS_time_label = Label(result_window, text="Link State latency: " + str(LSlatency) + " seconds")
 
         # Pack the labels in the window
         # bf_dist_label.pack()
@@ -157,9 +164,10 @@ class RandomGraphGeneratorGUI:
         djk_time_label.pack()
         path_label.pack()
         arrival_time_label.pack()
+        DV_time_label.pack()
+        LS_time_label.pack()
 
         
-
         # Create a list of data
         data = [
             [n_nodes],
@@ -167,7 +175,9 @@ class RandomGraphGeneratorGUI:
             [bf_time],
             [djk_time],
             [packet_path],
-            [packet_arrival_time]
+            [packet_arrival_time],
+            [DVlatency],
+            [LSlatency]
         ]
 
         # Transpose the data to switch rows by columns
@@ -198,6 +208,8 @@ class RandomGraphGeneratorGUI:
                 routing_table[src][dest] = next_hop
 
         print(routing_table)
+        #utils.distance_vector_algorithm(G, source=0)
+        
         
     # def disrupt_path(self):
     #     # Get the graph G from the canvas
@@ -277,6 +289,7 @@ class RandomGraphGeneratorGUI:
             nx.draw_networkx_edge_labels(G, pos, edge_labels=nx.get_edge_attributes(G, 'weight'))
             self.canvas.draw()
 
+    
 
 
 
