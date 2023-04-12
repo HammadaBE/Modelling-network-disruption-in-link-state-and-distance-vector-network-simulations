@@ -1,4 +1,3 @@
-# as_simulator.py
 
 import threading
 import time
@@ -7,6 +6,10 @@ from collections import defaultdict
 import time
 import networkx as nx
 import matplotlib.pyplot as plt
+import socket
+import logging
+
+logging.basicConfig(filename='packet_log.txt', level=logging.INFO)
 
 class Node:
     def __init__(self, node_id):
@@ -59,6 +62,8 @@ class Node:
 class AutonomousSystemSimulator:
     def __init__(self):
         self.nodes = {}
+        self.emulator_host = '127.0.0.1'
+        self.emulator_port = 12345
 
     def add_node(self, node_id):
         node = Node(node_id)
@@ -68,42 +73,12 @@ class AutonomousSystemSimulator:
         self.nodes[node1_id].add_neighbor(node2_id, cost)
         self.nodes[node2_id].add_neighbor(node1_id, cost)
 
-    def distance_vector_algorithm(self):
-        start_time = time.time()
-        converged = False
-        while not converged:
-            converged = True
-            updates = {
-                node_id: node.routing_table
-                for node_id, node in self.nodes.items()
-                if node_id in node.neighbors
-            }
-            for node in self.nodes.values():
-                if node.distance_vector(updates):
-                    converged = False
-                    print(f"Node {node.node_id} routing table updated (Distance Vector)")
-                    print(node.routing_table)
-            time.sleep(1)
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        print(f"Distance Vector algorithm converged in {elapsed_time} seconds")
-
-    def link_state_algorithm(self):
-        start_time = time.time()
-        graph = {node_id: node.neighbors for node_id, node in self.nodes.items()}
-        for node in self.nodes.values():
-            node.link_state(graph)
-            print(f"Node {node.node_id} routing table updated (Link State)")
-            print(node.routing_table)
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        print(f"Link State algorithm converged in {elapsed_time} seconds")
-
     def disrupt_link(self, node1_id, node2_id, cost):
         self.nodes[node1_id].neighbors[node2_id] = cost
         self.nodes[node2_id].neighbors[node1_id] = cost
 
     def run_algorithm(self, algorithm):
+        print(f"Running {algorithm} algorithm...")
         start_time = time.time()
         if algorithm == 'distance_vector':
             converged = False
@@ -116,22 +91,35 @@ class AutonomousSystemSimulator:
                     }
                     if node.distance_vector(updates):
                         converged = False
-                        print(f"Node {node.node_id} routing table updated (Distance Vector)")
-                        print(node.routing_table)
+                        logging.info(f"Node {node.node_id} routing table updated (Distance Vector)")
+                        logging.info(node.routing_table)
                 time.sleep(1)
         elif algorithm == 'link_state':
             graph = {node_id: node.neighbors for node_id, node in self.nodes.items()}
             for node in self.nodes.values():
                 node.link_state(graph)
-                print(f"Node {node.node_id} routing table updated (Link State)")
-                print(node.routing_table)
+                logging.info(f"Node {node.node_id} routing table updated (Link State)")
+                logging.info(node.routing_table)
         else:
             raise ValueError("Invalid algorithm name")
         end_time = time.time()
         elapsed_time = end_time - start_time
-        print(f"{algorithm} algorithm converged in {elapsed_time} seconds")
+        logging.info(f"{algorithm} algorithm converged in {elapsed_time} seconds")
 
-    def create_networkx_graph(self):
+    def create_networkx_graph(self,num_nodes,num_edges):
+        
+        # Create nodes
+        for _ in range(num_nodes):
+            node_id = generate_random_node_id(self.nodes.keys())
+            self.add_node(node_id)
+
+        # Add edges between nodes
+        node_ids = list(self.nodes.keys())
+        for _ in range(num_edges):
+            node1_id, node2_id = random.sample(node_ids, 2)
+            cost = random.randint(1, 10)
+            self.add_link(node1_id, node2_id, cost)  
+
         G = nx.Graph()
         G.add_nodes_from(self.nodes.keys())
         for node_id, node in self.nodes.items():
@@ -144,13 +132,67 @@ class AutonomousSystemSimulator:
         nx.draw(G, pos, with_labels=True)
         labels = nx.get_edge_attributes(G, 'weight')
         nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
-        plt.show()
+        
+        
 
+    def send_packet(self, source_node_id, dest_node_id, data):
+        current_node_id = source_node_id
+        path_taken = [current_node_id]
+        total_cost = 0
+
+        while current_node_id != dest_node_id:
+            next_hop_id = self.nodes[current_node_id].routing_table[dest_node_id][0]
+            cost = self.nodes[current_node_id].neighbors[next_hop_id]
+            total_cost += cost
+
+            # with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+            #     client_socket.connect((self.emulator_host, self.emulator_port))
+            #     client_socket.sendall(f"{current_node_id} -> {next_hop_id}".encode())
+            #     response = client_socket.recv(1024)
+            #     logging.info(response.decode())
+
+            # Log the transmission step without using sockets
+            logging.info(f"{current_node_id} -> {next_hop_id}")
+
+            path_taken.append(next_hop_id)
+            current_node_id = next_hop_id
+
+        logging.info(f"Packet with data '{data}' sent from {source_node_id} to {dest_node_id} via path {path_taken} with total cost {total_cost}")
+
+    def comparingAlgo(self, source_node_id, dest_node_id, data):
+        results = {}
+        for algorithm in ['distance_vector', 'link_state']:
+
+            print(f"Running {algorithm} algorithm...")
+            # Run the algorithm and get the convergence time
+            convergence_time = self.run_algorithm(algorithm)
+
+            # Measure the time before sending the packet
+            start_time = time.time()
+
+            # Call the send_packet method
+            self.send_packet(source_node_id, dest_node_id, data)
+
+            # Measure the time after sending the packet
+            end_time = time.time()
+
+            # Calculate the time difference and print the result
+            elapsed_time = end_time - start_time
+
+            results[algorithm] = {
+            'elapsed_time': elapsed_time,
+            'convergence_time': convergence_time
+            }
+            print(f"{algorithm} algorithm took {elapsed_time} seconds to send a packet from {source_node_id} to {dest_node_id} after converging in {convergence_time} seconds")
+            logging.info(f"{algorithm} algorithm took {elapsed_time} seconds to send a packet from {source_node_id} to {dest_node_id} after converging in {convergence_time} seconds")
+
+        return results
+    
 import random
 
 def generate_random_node_id(existing_ids):
     while True:
-        node_id = chr(random.randint(ord('A'), ord('Z')))
+        node_id = random.randint(1,2000)
         if node_id not in existing_ids:
             return node_id
         
@@ -158,10 +200,9 @@ def get_random_connected_nodes(simulator):
     node_id = random.choice(list(simulator.nodes.keys()))
     connected_node_id = random.choice(list(simulator.nodes[node_id].neighbors.keys()))
     return node_id, connected_node_id
-        
+
 if __name__ == '__main__':
     simulator = AutonomousSystemSimulator()
-
 
     # Get the number of nodes and edges from the user
     num_nodes = int(input("Enter the number of nodes: "))
@@ -184,7 +225,6 @@ if __name__ == '__main__':
     # simulator.add_node('B')
     # simulator.add_node('C')
 
-
     # # Add links between nodes
     # simulator.add_link('A', 'B', 1)
     # simulator.add_link('B', 'C', 2)
@@ -199,24 +239,21 @@ if __name__ == '__main__':
     # Visualize the graph
     simulator.visualize_graph(G)
 
-    # # Disrupt a link
-    # simulator.disrupt_link('A', 'B', float('inf'))
-
-    
-
-    
+    # Send a packet from node 1 to node 2
+    source_node_id = 1
+    dest_node_id = 2
+    data = "Hello, world!"
+    simulator.send_packet(source_node_id, dest_node_id, data)
 
     # Disrupt a link after the first packet is sent
     time.sleep(2)  # Wait 2 seconds to simulate the first packet being sent
+
     # Select random connected nodes to be disconnected
     node1_id, node2_id = get_random_connected_nodes(simulator)
 
     # Disrupt the link between the nodes
-    simulator.disrupt_link(node1_id, node2_id, float('100'))  # Set the cost to 100 to simulate link failure
-    print(f"Disrupted link between {node1_id} and {node2_id}")
-
-    # print("Disrupting link between A and B")
-    # simulator.disrupt_link('A', 'B', float('20'))  # Set the cost to 20 to simulate link failure
+    simulator.disrupt_link(node1_id, node2_id, float('inf'))  # Set the cost to infinity to simulate link failure
+    logging.info(f"Disrupted link between {node1_id} and {node2_id}")
 
     # Run the algorithms again to measure the time it takes to redefine the paths
     simulator.run_algorithm('distance_vector')
@@ -228,10 +265,5 @@ if __name__ == '__main__':
     # Visualize the disrupted graph
     simulator.visualize_graph(G_disrupted)
 
-    # # Run the Distance Vector algorithm
-    # print("Running Distance Vector algorithm")
-    # simulator.distance_vector_algorithm()
-
-    # # Run the Link State algorithm 
-    # print("Running Link State algorithm")
-    # simulator.link_state_algorithm()
+    # Send another packet from node 1 to node 2 after the link has been disrupted
+    simulator.send_packet(source_node_id, dest_node_id, data)
