@@ -8,20 +8,6 @@ from tkinter import filedialog
 import csv
 
 
-# # Create a random network topology
-# def generate_network_topology(n_nodes, n_edges):
-#     G = nx.Graph()
-#     nodes = list(range(1, n_nodes + 1))
-#     G.add_nodes_from(nodes)
-
-#     for _ in range(n_edges):
-#         u = random.choice(nodes)
-#         v = random.choice(nodes)
-#         weight = random.randint(1, 10)
-#         G.add_edge(u, v, weight=weight)
-
-#     return G
-
 # Distance-vector algorithm (basic implementation)
 def distance_vector_algorithm(G, source):
     distance = {node: float('inf') for node in G.nodes}
@@ -55,9 +41,7 @@ def link_state_algorithm(G, source):
 
     return distance
 
-# Example usage
-# G = generate_network_topology(100, 200)
-# source = 1
+
 
  # Calculate the latency for distance-vector and link-state algorithms
 def distance_vector_algorithm_time(G, source):
