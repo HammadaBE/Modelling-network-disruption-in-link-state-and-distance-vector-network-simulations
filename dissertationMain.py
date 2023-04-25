@@ -42,7 +42,7 @@ class RandomGraphGeneratorGUI:
         self.entry2 = tk.Entry(master)
         #self.entry3 = tk.Entry(master)
         self.button1 = tk.Button(master, text="Generate Graph", command=self.generate_graph)
-        #self.button2 = tk.Button(master, text="Disrupt path", command=self.disrupt_path)
+        self.button2 = tk.Button(master, text="Disrupt path", command=self.disrupt_and_run_protocols)
         self.button3 = tk.Button(master, text="Load Graph", command=self.load_graph)
         self.button4 = tk.Button(master, text="Save Graph", command=self.save_graph)
         #self.button5 = tk.Button(master, text="Build Routing Table", command=self.build_routing_table)
@@ -126,6 +126,7 @@ class RandomGraphGeneratorGUI:
 
         # Add the save graph button after drawing the graph
         self.G = G  # Store the graph object in self.G for later use
+        self.button2.place(x=900, y=60)
         self.button4.place(x=900, y=20)
    
         DVlatency =utils.distance_vector_algorithm_time(G, source=0)
@@ -195,7 +196,65 @@ class RandomGraphGeneratorGUI:
                 routing_table[src][dest] = next_hop
 
         print(routing_table)
-   
+
+    def disrupt_and_run_protocols(self):
+
+        n_nodes = int(self.entry1.get())
+        n_edges = int(self.entry2.get())
+        # Get a random connected edge from the created graph
+        edge = random.choice(list(self.G.edges))
+        node1_id, node2_id = edge
+
+        # Set the cost to 100 to simulate link failure
+        self.G[node1_id][node2_id]['weight'] = 100
+
+        # Visualize the disrupted graph
+        self.fig.clear()
+        pos = nx.spring_layout(self.G)
+        nx.draw(self.G, pos, with_labels=True)
+        nx.draw_networkx_edge_labels(self.G, pos, edge_labels=nx.get_edge_attributes(self.G, 'weight'))
+        self.canvas.draw()
+
+        # Run the algorithms again to measure the time it takes to redefine the paths
+        start_node = 0
+        end_node = self.G.number_of_nodes() - 1
+
+        start_time = time.time()
+        bf_dist = nx.bellman_ford_path(self.G, target=end_node, source=start_node, weight='weight')
+        bf_time = time.time() - start_time
+
+        start_time = time.time()
+        djk_dist = nx.dijkstra_path(self.G, target=end_node, source=start_node, weight='weight')
+        djk_time = time.time() - start_time
+
+        DVlatency =utils.distance_vector_algorithm_time(self.G, source=0)
+        LSlatency=utils.link_state_algorithm_time(self.G, source=0)
+
+        # Print results
+        # print("Disrupted link between {} and {}".format(node1_id, node2_id))
+        # print("Bellman-Ford distance:", bf_dist)
+        # print("Bellman-Ford time:", bf_time)
+        # print("Dijkstra distance:", djk_dist)
+        # print("Dijkstra time:", djk_time)
+
+        # Create a list of data
+        data_after_diruption = [
+            [n_nodes],
+            [n_edges],
+            [bf_time],
+            [djk_time],
+            [DVlatency],
+            [LSlatency]
+        ]
+
+        # Transpose the data to switch rows by columns
+        data_transposed = list(zip(*data_after_diruption))
+
+        # Create a new CSV file and write the data to it
+        with open('result_after_disruption.csv', mode='a', newline='') as file:
+            writer = csv.writer(file)
+            for row in data_transposed:
+                writer.writerow(row)
 
     def save_graph(self):
         initial_dir = os.path.expanduser("./savedGraphs")  

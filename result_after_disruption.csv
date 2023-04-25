@@ -1,0 +1,2 @@
+Number of nodes,Number of edges,Bellman-Ford time,Dijkstra time,Distance Vector Latency,Link-State latency
+71,142,0.000991583,0,0.0289994,0.0033607
