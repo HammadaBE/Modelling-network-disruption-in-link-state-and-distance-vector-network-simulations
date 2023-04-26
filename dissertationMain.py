@@ -100,10 +100,11 @@ class RandomGraphGeneratorGUI:
         djk_time = time.time() - start_time
 
         # Measure packet arrival time
-        packet_speed = 1  # Distance covered by packet per second
+        #packet_speed = 1  # Distance covered by packet per second
+        global packet_path 
         packet_path = nx.shortest_path(G, source=start_node, target=end_node, weight='weight')
-        packet_distance = nx.shortest_path_length(G, source=start_node, target=end_node, weight='weight')
-        packet_arrival_time = packet_distance / packet_speed
+        #packet_distance = nx.shortest_path_length(G, source=start_node, target=end_node, weight='weight')
+        #packet_arrival_time = packet_distance / packet_speed
 
         # Print results
         print("Bellman-Ford distance:", bf_dist)
@@ -111,7 +112,7 @@ class RandomGraphGeneratorGUI:
         print("Dijkstra distance:", djk_dist)
         print("Dijkstra time:", djk_time)
         print("Packet path:", packet_path)
-        print("Packet arrival time:", packet_arrival_time, "seconds")
+        #print("Packet arrival time:", packet_arrival_time, "seconds")
 
 
 
@@ -142,7 +143,7 @@ class RandomGraphGeneratorGUI:
         bf_time_label = Label(result_window, text="Bellman-Ford time: " + str(bf_time))
         djk_time_label = Label(result_window, text="Dijkstra time: " + str(djk_time))
         path_label = Label(result_window, text="Packet path: " + str(packet_path))
-        arrival_time_label = Label(result_window, text="Packet arrival time: " + str(packet_arrival_time) + " seconds")
+        #arrival_time_label = Label(result_window, text="Packet arrival time: " + str(packet_arrival_time) + " seconds")
         DV_time_label = Label(result_window, text="Distance Vector latency: " + str(DVlatency) + " seconds")
         LS_time_label = Label(result_window, text="Link State latency: " + str(LSlatency) + " seconds")
 
@@ -151,7 +152,7 @@ class RandomGraphGeneratorGUI:
         bf_time_label.pack()
         djk_time_label.pack()
         path_label.pack()
-        arrival_time_label.pack()
+        #arrival_time_label.pack()
         DV_time_label.pack()
         LS_time_label.pack()
 
@@ -163,7 +164,7 @@ class RandomGraphGeneratorGUI:
             [bf_time],
             [djk_time],
             [packet_path],
-            [packet_arrival_time],
+            #[packet_arrival_time],
             [DVlatency],
             [LSlatency]
         ]
@@ -201,12 +202,17 @@ class RandomGraphGeneratorGUI:
 
         n_nodes = int(self.entry1.get())
         n_edges = int(self.entry2.get())
-        # Get a random connected edge from the created graph
-        edge = random.choice(list(self.G.edges))
-        node1_id, node2_id = edge
+
+        # Choose a random edge within the packet_path
+        path_edges = list(zip(packet_path[:-1], packet_path[1:]))
+        failed_edge = random.choice(path_edges)
+        node1_id, node2_id = failed_edge
 
         # Set the cost to 100 to simulate link failure
         self.G[node1_id][node2_id]['weight'] = 100
+
+        # Recalculate the shortest path after the link failure
+        new_packet_path = nx.shortest_path(self.G, source=0, target=n_nodes-1, weight='weight')
 
         # Visualize the disrupted graph
         self.fig.clear()
@@ -227,15 +233,38 @@ class RandomGraphGeneratorGUI:
         djk_dist = nx.dijkstra_path(self.G, target=end_node, source=start_node, weight='weight')
         djk_time = time.time() - start_time
 
+        
+
         DVlatency =utils.distance_vector_algorithm_time(self.G, source=0)
         LSlatency=utils.link_state_algorithm_time(self.G, source=0)
 
-        # Print results
-        # print("Disrupted link between {} and {}".format(node1_id, node2_id))
-        # print("Bellman-Ford distance:", bf_dist)
-        # print("Bellman-Ford time:", bf_time)
-        # print("Dijkstra distance:", djk_dist)
-        # print("Dijkstra time:", djk_time)
+        # Create a new window to show the results
+        result_window = Toplevel(self.master)
+        result_window.title("Results")
+
+        # Create labels to display the results
+        bf_time_label = Label(result_window, text="New Bellman-Ford time: " + str(bf_time))
+        djk_time_label = Label(result_window, text="New Dijkstra time: " + str(djk_time))
+        path_label = Label(result_window, text="New Packet path: " + str(new_packet_path))
+        #arrival_time_label = Label(result_window, text="Packet arrival time: " + str(packet_arrival_time) + " seconds")
+        DV_time_label = Label(result_window, text="New Distance Vector latency: " + str(DVlatency) + " seconds")
+        LS_time_label = Label(result_window, text="New Link State latency: " + str(LSlatency) + " seconds")
+
+        # Pack the labels in the window
+     
+        bf_time_label.pack()
+        djk_time_label.pack()
+        path_label.pack()
+        #arrival_time_label.pack()
+        DV_time_label.pack()
+        LS_time_label.pack()
+
+        #Print results
+        print("Disrupted link between {} and {}".format(node1_id, node2_id))
+        print("Bellman-Ford distance:", bf_dist)
+        print("Bellman-Ford time:", bf_time)
+        print("Dijkstra distance:", djk_dist)
+        print("Dijkstra time:", djk_time)
 
         # Create a list of data
         data_after_diruption = [
